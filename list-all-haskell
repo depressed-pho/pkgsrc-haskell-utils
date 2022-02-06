@@ -1,0 +1,21 @@
+#!/bin/sh
+set -eu
+
+cd /usr/pkgsrc
+find . -maxdepth 3 -mindepth 3 -name Makefile \
+     -exec fgrep --files-with-matches mk/haskell.mk {} + |
+    sed -e 's,\./,,;s,/Makefile$,,' |
+    egrep -v '^wip/' |
+    sort -u |
+    while read pkgdir; do # For each package using mk/haskell.mk
+        echo "${pkgdir} ${pkgdir}" # Self-cycle to make it appear in the result even if it has no dependencies
+        (cd ${pkgdir} && bmake show-vars VARNAMES="BUILD_DEPENDS TOOL_DEPENDS DEPENDS") |
+            tr ' ' '\n' |
+            cut -d ':' -f 2 |
+            sed 's|../../||' |
+            sort -u |
+            while read pkgdep; do
+                echo "${pkgdep} ${pkgdir}" # tsort's notation: ${pkgdir} depends on ${pkgdep}
+            done
+    done |
+    tsort

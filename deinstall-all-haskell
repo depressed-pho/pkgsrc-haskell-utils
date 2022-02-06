@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -eu
+
+packages=$(pkg_info -qr ghc | sort)
+
+(
+    echo "These packages are to be deleted. Are you okay with this?"
+    echo "(You'll be prompted after quitting the pager.)"
+    echo "--"
+    echo "${packages}"
+) | ${PAGER:-less}
+
+echo -n "Type y/n: "
+read -n 1 key
+case "$key" in
+    y)
+        echo
+        echo "echo \"\$packages\" | sudo xargs pkg_delete -fv"
+        echo "${packages}" | sudo xargs pkg_delete -fv;;
+    *)
+        exit
+esac
