@@ -1,0 +1,9 @@
+#!/bin/sh
+set -eu
+
+pkg_info -qr ghc |
+    sort -u |
+    sudo xargs pkg_admin set rebuild=YES
+
+echo "Marked all the Haskell packages as requiring a rebuild."
+echo "Now run \`pkg_rolling-replace -sv'".

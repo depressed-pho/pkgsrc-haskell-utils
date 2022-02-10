@@ -11,7 +11,7 @@ packages=$(pkg_info -qr ghc | sort)
 ) | ${PAGER:-less}
 
 echo -n "Type y/n: "
-read -n 1 key
+read -r -n 1 key
 case "$key" in
     y)
         echo

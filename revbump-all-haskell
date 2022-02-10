@@ -5,9 +5,9 @@ if [ ! -e /tmp/allbump ]; then
     echo "==> Searching for packages that need revbump"
     cd /usr/pkgsrc
     find . -maxdepth 3 -mindepth 3 -name Makefile \
-         -exec fgrep --files-with-matches mk/haskell.mk {} + | \
+         -exec grep -F --files-with-matches mk/haskell.mk {} + | \
         sed -e 's,\./,,;s,/Makefile$,,' | \
-        egrep -v '^wip/' | \
+        grep -E -v '^wip/' | \
         sort -u | tee /tmp/allbump
 fi
 
@@ -38,12 +38,12 @@ if [ -s /tmp/blbump.manual ]; then
 fi
 
 echo "==> Getting cvs diff"
-cvs -q diff -u `cat /tmp/allbump` >/tmp/revbump.diff || true
+cvs -q diff -u "$(cat /tmp/allbump)" >/tmp/revbump.diff || true
 
 echo "==> Cleaning up unintended changes"
 check-cvs-diff /tmp/revbump.diff
 
-cvs -q diff -u `cat /tmp/allbump` | less
-cvs ci `cat /tmp/allbump`
+cvs -q diff -u "$(cat /tmp/allbump)" | less
+cvs ci "$(cat /tmp/allbump)"
 
 rm -f /tmp/allbump /tmp/revbump.manual /tmp/blbump.manual /tmp/revbump.diff
