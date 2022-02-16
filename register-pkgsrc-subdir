@@ -55,7 +55,10 @@ pkgdir="$(basename "$(pwd)")"
 declare cateogory
 category="$(basename "$(dirname "$(pwd)")")"
 
+echo "=> Updating ${category}/Makefile"
 (cd ..; cvs up Makefile)
+
+echo "=> Generating a diff to ${category}/Makefile"
 gawk -v PKGDIR="${pkgdir}" -- \
      "${rewrite_gawk}" ../Makefile \
      > /tmp/Makefile.tmp
@@ -65,5 +68,6 @@ declare key
 # shellcheck disable=SC2034
 read -r -n 1 -p "Okay to commit? Type C-c to abort" key
 
+echo "=> Committing changes to ${category}/Makefile"
 mv /tmp/Makefile.tmp ../Makefile
 (cd ..; cvs ci -m "${category}/Makefile: + ${pkgdir}" Makefile)
