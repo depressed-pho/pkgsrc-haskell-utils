@@ -2,6 +2,7 @@ bin_SCRIPTS= \
 	deinstall-all-haskell \
 	list-all-haskell \
 	rebuild-all-haskell \
+	register-pkgsrc-subdir \
 	revbump-all-haskell \
 	${NULL}
 

@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+set -eu
+
+# Sanity check: is the parent directory really a pkgsrc category?
+if [[ ! -f ../Makefile ]]; then
+    echo >&2 "The parent directory doesn't even have a Makefile"
+    exit 1
+
+elif ! grep -F "../mk/misc/category.mk" ../Makefile >/dev/null 2>&1; then
+    echo >&2 "The parent directory doesn't look like a pkgsrc category"
+    exit 1
+fi
+
+declare rewrite_gawk
+read -r -d '' rewrite_gawk <<'EOF' || true
+BEGIN {
+    end_of_header = 0;
+    delete header[0]; /* Hack: declare the array */
+    delete pkgdirs[0];
+    delete footer[0];
+}
+/^SUBDIR\+=/ {
+    end_of_header = 1;
+    pkgdirs[length(pkgdirs)] = $2;
+    next;
+}
+{
+    if (end_of_header) {
+        footer[length(footer)] = $0;
+    }
+    else {
+        header[length(header)] = $0;
+    }
+    next;
+}
+END {
+    for (i in header) {
+        print header[i];
+    }
+
+    pkgdirs[length(pkgdirs)] = PKGDIR;
+    asort(pkgdirs);
+    for (i in pkgdirs) {
+        print "SUBDIR+=\t" pkgdirs[i];
+    }
+
+    for (i in footer) {
+        print footer[i];
+    }
+}
+EOF
+
+declare pkgdir
+pkgdir="$(basename "$(pwd)")"
+
+(cd ..; cvs up Makefile)
+gawk -v PKGDIR="${pkgdir}" -- \
+     "${rewrite_gawk}" ../Makefile \
+     > /tmp/Makefile.tmp
+diff -u ../Makefile /tmp/Makefile.tmp || true
+
+declare key
+# shellcheck disable=SC2034
+read -r -n 1 -p "Okay to commit? Type C-c to abort" key
+
+mv /tmp/Makefile.tmp ../Makefile
+(cd ..; cvs ci -m "+${pkgdir}" Makefile)

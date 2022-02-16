@@ -38,12 +38,15 @@ if [ -s /tmp/blbump.manual ]; then
 fi
 
 echo "==> Getting cvs diff"
+# shellcheck disable=SC2046
 cvs -q diff -u $(cat /tmp/allbump) >/tmp/revbump.diff || true
 
 echo "==> Cleaning up unintended changes"
 check-cvs-diff /tmp/revbump.diff
 
+# shellcheck disable=SC2046
 cvs -q diff -u $(cat /tmp/allbump) | less
+# shellcheck disable=SC2046
 cvs ci $(cat /tmp/allbump)
 
 rm -f /tmp/allbump /tmp/revbump.manual /tmp/blbump.manual /tmp/revbump.diff
