@@ -52,6 +52,8 @@ EOF
 
 declare pkgdir
 pkgdir="$(basename "$(pwd)")"
+declare cateogory
+category="$(basename "$(dirname "$(pwd)")")"
 
 (cd ..; cvs up Makefile)
 gawk -v PKGDIR="${pkgdir}" -- \
@@ -64,4 +66,4 @@ declare key
 read -r -n 1 -p "Okay to commit? Type C-c to abort" key
 
 mv /tmp/Makefile.tmp ../Makefile
-(cd ..; cvs ci -m "+${pkgdir}" Makefile)
+(cd ..; cvs ci -m "${category}/Makefile: + ${pkgdir}" Makefile)
