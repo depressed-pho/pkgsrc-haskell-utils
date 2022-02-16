@@ -17,11 +17,18 @@ BEGIN {
     end_of_header = 0;
     delete header[0]; /* Hack: declare the array */
     delete pkgdirs[0];
+    delete disabled[0]; /* name -> line */
     delete footer[0];
 }
 /^SUBDIR\+=/ {
     end_of_header = 1;
     pkgdirs[length(pkgdirs)] = $2;
+    next;
+}
+/^#SUBDIR\+=/ {
+    end_of_header = 1;
+    pkgdirs[length(pkgdirs)] = $2;
+    disabled[$2] = $0;
     next;
 }
 {
@@ -41,7 +48,12 @@ END {
     pkgdirs[length(pkgdirs)] = PKGDIR;
     asort(pkgdirs);
     for (i in pkgdirs) {
-        print "SUBDIR+=\t" pkgdirs[i];
+        if (disabled[pkgdirs[i]]) {
+            print disabled[pkgdirs[i]];
+        }
+        else {
+            print "SUBDIR+=\t" pkgdirs[i];
+        }
     }
 
     for (i in footer) {
