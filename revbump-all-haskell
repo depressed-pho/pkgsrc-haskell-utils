@@ -50,3 +50,4 @@ cvs -q diff -u $(cat /tmp/allbump) | less
 cvs ci $(cat /tmp/allbump)
 
 rm -f /tmp/allbump /tmp/revbump.manual /tmp/blbump.manual /tmp/revbump.diff
+rm -f /tmp/revbump.done /tmp/blbump.done
