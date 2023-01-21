@@ -1,7 +1,18 @@
 #!/usr/bin/env bash
 set -eu
 
-packages=$(pkg_info -qr ghc | sort)
+if pkg_info -qe ghc; then
+    packages=$(pkg_info -qr ghc | sort)
+else
+    echo "GHC seems to have been uninstalled. Checking for leftovers..."
+    declare -a pkgs=()
+    while read pkgname dummy; do
+        if pkg_info -qN "$pkgname" | grep -qE '^ghc-[^-]+$'; then
+            pkgs+=("$pkgname")
+        fi
+    done < <(pkg_info)
+    packages="${pkgs[*]}"
+fi
 
 (
     echo "These packages are to be deleted. Are you okay with this?"
