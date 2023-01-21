@@ -1,5 +1,5 @@
 bin_SCRIPTS= \
-	deinstall-all-haskell \
+	uninstall-all-haskell \
 	list-all-haskell \
 	rebuild-all-haskell \
 	register-pkgsrc-subdir \
