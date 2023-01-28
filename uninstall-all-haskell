@@ -6,7 +6,7 @@ if pkg_info -qe ghc; then
 else
     echo "GHC seems to have been uninstalled. Checking for leftovers..."
     declare -a pkgs=()
-    while read pkgname dummy; do
+    while read -r pkgname _description; do
         if pkg_info -qN "$pkgname" | grep -qE '^ghc-[^-]+$'; then
             pkgs+=("$pkgname")
         fi

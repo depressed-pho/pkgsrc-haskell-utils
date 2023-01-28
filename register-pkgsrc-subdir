@@ -64,7 +64,7 @@ EOF
 
 declare pkgdir
 pkgdir="$(basename "$(pwd)")"
-declare cateogory
+declare category
 category="$(basename "$(dirname "$(pwd)")")"
 
 echo "=> Updating ${category}/Makefile"
@@ -76,9 +76,8 @@ gawk -v PKGDIR="${pkgdir}" -- \
      > /tmp/Makefile.tmp
 diff -u ../Makefile /tmp/Makefile.tmp || true
 
-declare key
-# shellcheck disable=SC2034
-read -r -n 1 -p "Okay to commit? Type C-c to abort" key
+declare _key
+read -r -n 1 -p "Okay to commit? Type C-c to abort" _key
 
 echo "=> Committing changes to ${category}/Makefile"
 mv /tmp/Makefile.tmp ../Makefile
