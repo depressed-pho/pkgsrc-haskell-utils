@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -eu
+
+cd /usr/pkgsrc/wip
+find . -maxdepth 2 -mindepth 2 -name Makefile \
+     -exec grep -F --files-with-matches mk/haskell.mk {} + |
+    sed -e 's,\./,,;s,/Makefile$,,' |
+    sort -u |
+    while read -r pkgName; do # For each wip package using mk/haskell.mk
+        mapfile -t pkgs < <(pkgfind -q -x "$pkgName")
+        if (( ${#pkgs[*]} > 1 )); then
+            declare mainPkg tmp
+            for tmp in "${pkgs[@]}"; do
+                if [[ "$tmp" != wip/* ]]; then
+                    mainPkg="$tmp"
+                    break
+                fi
+            done
+            echo "wip/${pkgName} is redundant. Delete it in favor of ${mainPkg}"
+        fi
+    done
