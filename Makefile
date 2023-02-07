@@ -1,3 +1,4 @@
+bindir= ~/bin
 bin_SCRIPTS= \
 	uninstall-all-haskell \
 	list-all-haskell \
@@ -12,6 +13,7 @@ lint:
 	shellcheck ${bin_SCRIPTS} | ${PAGER}
 
 install:
+	mkdir -p ${bindir}
 	for f in ${bin_SCRIPTS}; do \
-		ln -f $${f} ~/bin/$${f}; \
+		ln -f $${f} ${bindir}/$${f}; \
 	done
