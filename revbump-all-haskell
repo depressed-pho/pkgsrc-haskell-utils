@@ -1,6 +1,12 @@
 #!/bin/sh
 set -eu
 
+REVBUMP=revbump.py
+if ! ${REVBUMP} -h >/dev/null 2>&1; then
+    echo >&2 "$0: ${REVBUMP} isn't installed or working"
+    exit 1
+fi
+
 if [ ! -e /tmp/allbump ]; then
     echo "==> Searching for packages that need revbump"
     cd /usr/pkgsrc
@@ -12,42 +18,20 @@ if [ ! -e /tmp/allbump ]; then
 fi
 
 if [ ! -e /tmp/revbump.done ]; then
-    echo "==> Bumping Makefile"
-    revbump < /tmp/allbump | tee /tmp/revbump.manual
+    echo "==> Bumping Makefile and buildlink3.mk"
+    while read pkgdir; do
+        echo "${pkgdir}"
+        ${REVBUMP} -x "${pkgdir}"
+    done < /tmp/allbump
     touch /tmp/revbump.done
-fi
-
-echo "=> Checking if there are any packages that failed to auto-bump"
-if [ -s /tmp/revbump.manual ]; then
-    echo "=> The following packages need manual revbump. Remove /tmp/revbump.manual and re-run $0 when you are done."
-    cat /tmp/revbump.manual
-    exit 1
-fi
-
-if [ ! -e /tmp/blbump.done ]; then
-    echo "==> Bumping buildlink3.mk"
-    blbump < /tmp/allbump | tee /tmp/blbump.manual
-    touch /tmp/blbump.done
-fi
-
-echo "=> Checking if there are any packages that failed to auto-bump"
-if [ -s /tmp/blbump.manual ]; then
-    echo "=> The following packages need manual blbump. Remove /tmp/blbump.manual and re-run $0 when you are done."
-    cat /tmp/blbump.manual
-    exit 1
 fi
 
 echo "==> Getting cvs diff"
 # shellcheck disable=SC2046
-cvs -q diff -u $(cat /tmp/allbump) >/tmp/revbump.diff || true
-
-echo "==> Cleaning up unintended changes"
-check-cvs-diff /tmp/revbump.diff
-
-# shellcheck disable=SC2046
 cvs -q diff -u $(cat /tmp/allbump) | less
+
+read -p "Okay to commit it? Type Enter to proceed:" dummy
 # shellcheck disable=SC2046
 cvs ci $(cat /tmp/allbump)
 
-rm -f /tmp/allbump /tmp/revbump.manual /tmp/blbump.manual /tmp/revbump.diff
-rm -f /tmp/revbump.done /tmp/blbump.done
+rm -f /tmp/allbump /tmp/revbump.done
