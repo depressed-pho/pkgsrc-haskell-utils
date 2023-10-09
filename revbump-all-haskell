@@ -27,6 +27,8 @@ if [ ! -e /tmp/revbump.done ]; then
 fi
 
 echo "==> Getting cvs diff"
+cd /usr/pkgsrc
+
 # shellcheck disable=SC2046
 cvs -q diff -u $(cat /tmp/allbump) | less
 
