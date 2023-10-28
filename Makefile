@@ -1,11 +1,13 @@
 bindir= ~/bin
 bin_SCRIPTS= \
-	uninstall-all-haskell \
+	import-and-register \
 	list-all-haskell \
 	list-redundant-haskell-wip \
 	rebuild-all-haskell \
 	register-pkgsrc-subdir \
 	revbump-all-haskell \
+	stash-commit-message \
+	uninstall-all-haskell \
 	${NULL}
 
 PAGER?= less

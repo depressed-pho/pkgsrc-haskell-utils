@@ -1,0 +1,7 @@
+#!/bin/sh
+set -eux
+
+pkglint
+import-package # pkgtools/import-package
+bmake cce CTYPE=Added
+register-pkgsrc-subdir

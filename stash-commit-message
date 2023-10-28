@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+set -eu
+
+readonly STASH_DIR="$HOME/tmp"
+readonly BASE_NAME="commit-message"
+
+function usage() {
+    echo >&2 "Usage: $0 [COMMAND]"
+    echo >&2
+    echo >&2 "Commands:"
+    echo >&2 "  push  Move the current message on top of the stack (default)"
+    echo >&2 "  pop   Move the top of the stack back to the current message"
+    echo >&2 "  list  List messages in the stack"
+}
+
+function evacuate() {
+    local -i n="$1"
+    local -i succ=$((n + 1))
+
+    if [[ -f "${STASH_DIR}/${BASE_NAME}.${n}" ]]; then
+        evacuate $succ
+        mv "${STASH_DIR}/${BASE_NAME}.${n}" "${STASH_DIR}/${BASE_NAME}.${succ}"
+    fi
+}
+
+function push() {
+    if [[ -f "${STASH_DIR}/${BASE_NAME}" ]]; then
+        evacuate 1
+        mv "${STASH_DIR}/${BASE_NAME}" "${STASH_DIR}/${BASE_NAME}.1"
+    else
+        echo >&2 "File not exists: ${STASH_DIR}/${BASE_NAME}"
+        return 1
+    fi
+}
+
+function restore() {
+    local -i n="$1"
+    local -i succ=$((n + 1))
+
+    if [[ -f "${STASH_DIR}/${BASE_NAME}.${succ}" ]]; then
+        mv "${STASH_DIR}/${BASE_NAME}.${succ}" "${STASH_DIR}/${BASE_NAME}.${n}"
+        restore $succ
+    fi
+}
+
+function pop() {
+    if [[ -f "${STASH_DIR}/${BASE_NAME}.1" ]]; then
+        mv "${STASH_DIR}/${BASE_NAME}.1" "${STASH_DIR}/${BASE_NAME}"
+    else
+        echo >&2 "File not exists: ${STASH_DIR}/${BASE_NAME}.1"
+        return 1
+    fi
+    restore 1
+}
+
+function list() {
+    if [[ -f "${STASH_DIR}/${BASE_NAME}" ]]; then
+        local head="$(head -n 1 "${STASH_DIR}/${BASE_NAME}.${n}")"
+        echo "Message #0: ${head}"
+    fi
+
+    local -i n=1
+    while true; do
+        if [[ -f "${STASH_DIR}/${BASE_NAME}.${n}" ]]; then
+            local head="$(head -n 1 "${STASH_DIR}/${BASE_NAME}.${n}")"
+            echo "Message #${n}: ${head}"
+            (( n++ )) || true
+        else
+            break
+        fi
+    done
+}
+
+case "$#" in
+    0)
+        push;;
+    1)
+        case "$1" in
+            "help"|"-h")
+                usage;;
+            "push")
+                push;;
+            "pop")
+                pop;;
+            "list")
+                list;;
+            *)
+                usage
+                exit 1;;
+        esac;;
+    *)
+        usage
+        exit 1;;
+esac
