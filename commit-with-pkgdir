@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -eu
+
+if (( $# < 1 )); then
+    echo >&2 "Usage: $0 MESSAGE"
+    exit 1
+fi
+readonly MESSAGE="$1"
+
+declare PKGDIR="$(bmake show-var VARNAME=PKGDIR)"
+
+saved_IFS="$IFS"
+IFS="/"
+set -- $PKGDIR
+IFS="$saved_IFS"
+
+while (( $# > 2 )); do
+    shift
+done
+PKGDIR="$1/$2"
+
+set -x
+cvs commit -m "$PKGDIR: $MESSAGE"

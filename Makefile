@@ -1,5 +1,6 @@
 bindir= ~/bin
 bin_SCRIPTS= \
+	commit-with-pkgdir \
 	import-and-register \
 	list-all-haskell \
 	list-redundant-haskell-wip \
