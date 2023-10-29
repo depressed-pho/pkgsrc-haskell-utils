@@ -28,7 +28,7 @@ function push() {
         evacuate 1
         mv "${STASH_DIR}/${BASE_NAME}" "${STASH_DIR}/${BASE_NAME}.1"
     else
-        echo >&2 "File not exists: ${STASH_DIR}/${BASE_NAME}"
+        echo >&2 "No messages to push"
         return 1
     fi
 }
@@ -47,7 +47,7 @@ function pop() {
     if [[ -f "${STASH_DIR}/${BASE_NAME}.1" ]]; then
         mv "${STASH_DIR}/${BASE_NAME}.1" "${STASH_DIR}/${BASE_NAME}"
     else
-        echo >&2 "File not exists: ${STASH_DIR}/${BASE_NAME}.1"
+        echo >&2 "No messages to pop"
         return 1
     fi
     restore 1
@@ -55,7 +55,7 @@ function pop() {
 
 function list() {
     if [[ -f "${STASH_DIR}/${BASE_NAME}" ]]; then
-        local head="$(head -n 1 "${STASH_DIR}/${BASE_NAME}.${n}")"
+        local head="$(head -n 1 "${STASH_DIR}/${BASE_NAME}")"
         echo "Message #0: ${head}"
     fi
 
