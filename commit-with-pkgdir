@@ -7,10 +7,12 @@ if (( $# < 1 )); then
 fi
 readonly MESSAGE="$1"
 
-declare PKGDIR="$(bmake show-var VARNAME=PKGDIR)"
+declare PKGDIR
+PKGDIR="$(bmake show-var VARNAME=PKGDIR)"
 
 saved_IFS="$IFS"
 IFS="/"
+# shellcheck disable=SC2086
 set -- $PKGDIR
 IFS="$saved_IFS"
 

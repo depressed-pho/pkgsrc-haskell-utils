@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 set -eu
 
 REVBUMP=revbump.py
@@ -19,7 +19,7 @@ fi
 
 if [ ! -e /tmp/revbump.done ]; then
     echo "==> Bumping Makefile and buildlink3.mk"
-    while read pkgdir; do
+    while read -r pkgdir; do
         echo "${pkgdir}"
         ${REVBUMP} -x "${pkgdir}"
     done < /tmp/allbump
@@ -32,7 +32,7 @@ cd /usr/pkgsrc
 # shellcheck disable=SC2046
 cvs -q diff -u $(cat /tmp/allbump) | less
 
-read -p "Okay to commit it? Type Enter to proceed:" dummy
+read -r -p "Okay to commit it? Type Enter to proceed:" _dummy
 # shellcheck disable=SC2046
 cvs ci $(cat /tmp/allbump)
 

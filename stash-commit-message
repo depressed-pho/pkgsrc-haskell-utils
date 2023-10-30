@@ -55,14 +55,16 @@ function pop() {
 
 function list() {
     if [[ -f "${STASH_DIR}/${BASE_NAME}" ]]; then
-        local head="$(head -n 1 "${STASH_DIR}/${BASE_NAME}")"
+        local head
+        head="$(head -n 1 "${STASH_DIR}/${BASE_NAME}")"
         echo "Message #0: ${head}"
     fi
 
     local -i n=1
     while true; do
         if [[ -f "${STASH_DIR}/${BASE_NAME}.${n}" ]]; then
-            local head="$(head -n 1 "${STASH_DIR}/${BASE_NAME}.${n}")"
+            local head
+            head="$(head -n 1 "${STASH_DIR}/${BASE_NAME}.${n}")"
             echo "Message #${n}: ${head}"
             (( n++ )) || true
         else
