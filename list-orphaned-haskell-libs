@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+set -eu
+
+declare -A dependency_of
+
+cd /usr/pkgsrc
+while read -r pkgdir; do
+    if [[ -z ${dependency_of["$pkgdir"]:-} ]]; then
+        # We don't know anything about this package. Record its existence.
+        dependency_of["$pkgdir"]="" # Set but empty
+    fi
+
+    while read -r pkgdep; do
+        if [[ -z "$pkgdep" ]]; then
+            continue
+        fi
+        # We discovered that $pkgdir depends on $pkgdep.
+        if [[ -z ${dependency_of["$pkgdep"]:-} ]]; then
+            # $pkgdep is either unknown or has an empty list.
+            dependency_of["$pkgdep"]="$pkgdir"
+        else
+            dependency_of["$pkgdep"]+=" $pkgdir"
+        fi
+    done \
+        < <(cd "$pkgdir" && \
+                bmake show-vars VARNAMES="BUILD_DEPENDS TOOL_DEPENDS DEPENDS" |
+                tr ' ' '\n' |
+                cut -d ':' -f 2 |
+                sed 's|../../||' |
+                sort -u)
+done \
+    < <(find . -maxdepth 3 -mindepth 3 -name Makefile \
+             -exec grep -F --files-with-matches mk/haskell.mk {} + |
+            sed -e 's,\./,,;s,/Makefile$,,' |
+            grep -E -v '^wip/')
+
+for pkgdir in "${!dependency_of[@]}"; do
+    if [[ -n ${dependency_of["$pkgdir"]:-} ]]; then
+        # Something depends on this package. Skip it.
+        continue
+    fi
+    # This one is a leaf. If it installs an executable, then skip it.
+    declare -i found_bin=0
+    for plist in "${pkgdir}/PLIST"*; do
+        if grep -q "^bin/" "$plist"; then
+            ((found_bin = 1))
+            break
+        fi
+    done
+    if (( found_bin )); then
+        continue
+    fi
+    echo "$pkgdir appears to be a Haskell library but no packages depend on it. Consider deleting it."
+done

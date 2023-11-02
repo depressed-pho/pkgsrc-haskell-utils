@@ -4,6 +4,7 @@ bin_SCRIPTS= \
 	grep-all-haskell \
 	import-and-register \
 	list-all-haskell \
+	list-orphaned-haskell-libs \
 	list-redundant-haskell-wip \
 	rebuild-all-haskell \
 	register-pkgsrc-subdir \
