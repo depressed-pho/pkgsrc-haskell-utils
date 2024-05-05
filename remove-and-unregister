@@ -53,3 +53,5 @@ bmake cce CTYPE=Removed
 find . -not \( -name 'CVS' -prune \) -type f -exec cvs rm -f {} +
 cvs ci -m "${message}"
 unregister-pkgsrc-subdir
+cd ..
+cvs up -dP "$(basename "${pkgpath}")"
