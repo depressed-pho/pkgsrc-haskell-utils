@@ -27,6 +27,7 @@ function push() {
     if [[ -f "${STASH_DIR}/${BASE_NAME}" ]]; then
         evacuate 1
         mv "${STASH_DIR}/${BASE_NAME}" "${STASH_DIR}/${BASE_NAME}.1"
+        touch "${STASH_DIR}/${BASE_NAME}"
     else
         echo >&2 "No messages to push"
         return 1
@@ -46,6 +47,9 @@ function restore() {
 function pop() {
     if [[ -f "${STASH_DIR}/${BASE_NAME}.1" ]]; then
         mv "${STASH_DIR}/${BASE_NAME}.1" "${STASH_DIR}/${BASE_NAME}"
+        local head
+        head="$(head -n 1 "${STASH_DIR}/${BASE_NAME}")"
+        echo "Head is now: ${head}"
     else
         echo >&2 "No messages to pop"
         return 1
