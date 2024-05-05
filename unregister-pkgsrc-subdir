@@ -81,4 +81,4 @@ read -r -n 1 -p "Okay to commit? Type C-c to abort" _key
 
 echo "=> Committing changes to ${category}/Makefile"
 mv /tmp/Makefile.tmp ../Makefile
-(cd ..; cvs ci -m "${category}/Makefile: + ${pkgdir}" Makefile)
+(cd ..; cvs ci -m "${category}/Makefile: - ${pkgdir}" Makefile)
