@@ -3,6 +3,7 @@ bin_SCRIPTS= \
 	commit-with-pkgdir \
 	grep-all-haskell \
 	import-and-register \
+	remove-and-unregister \
 	list-all-haskell \
 	list-orphaned-haskell-libs \
 	list-redundant-haskell-wip \
@@ -11,6 +12,7 @@ bin_SCRIPTS= \
 	revbump-all-haskell \
 	stash-commit-message \
 	uninstall-all-haskell \
+	unregister-pkgsrc-subdir \
 	${NULL}
 
 PAGER?= less

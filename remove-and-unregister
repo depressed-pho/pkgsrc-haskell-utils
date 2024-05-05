@@ -1,0 +1,55 @@
+#!/bin/sh
+set -eu
+
+usage() {
+    echo >&2 "Usage: $0 (-m MESSAGE | -F MESSAGE-FILE)"
+}
+
+message=
+while getopts F:m: opt; do
+      case $opt in
+          F)
+              message=$(cat "${OPTARG}");;
+          m)
+              message="${OPTARG}";;
+          \?)
+              usage
+              exit 1
+      esac
+done
+if [ "$message" = "" ]; then
+    usage
+    exit 1
+fi
+
+if ! pkgpath=$(bmake show-var VARNAME=PKGPATH); then
+    echo >&2 "This directory doesn't look like a pkgsrc PKGPATH."
+    exit 1
+fi
+
+echo "Checking if there still are packages that depend on \`$pkgpath'..."
+found=$(find ../.. \
+             -not \( \( -path "../../${pkgpath}" -o -name '.git' \) -prune \) \
+             \( -name 'Makefile' -o -name 'buildlink3.mk' \) \
+             -exec fgrep "${pkgpath}" {} + || true)
+if [ -n "$found" ]; then
+    echo "The package \`$pkgpath' is still mentioned by the following files:"
+    echo >&2 "$found"
+    exit 1
+fi
+
+echo "======================================================"
+echo "${message}"
+echo "======================================================"
+
+printf "We are about to remove \`%s' from pkgsrc. If you really want to proceed, type \"remove\" and Enter: " "${pkgpath}"
+read -r prompt
+if [ ! "$prompt" = "remove" ]; then
+    exit 1
+fi
+
+bmake clean
+bmake cce CTYPE=Removed
+find . -not \( -name 'CVS' -prune \) -type f -exec cvs rm -f {} +
+cvs ci -m "${message}"
+unregister-pkgsrc-subdir
