@@ -30,7 +30,7 @@ fi
 echo "Checking if there still are packages that depend on \`$pkgpath'..."
 found=$(find ../.. \
              -not \( \( -path "../../${pkgpath}" -o -name '.git' \) -prune \) \
-             \( -name 'Makefile' -o -name 'buildlink3.mk' \) \
+             \( -name 'Makefile*' -o -name 'buildlink3.mk' \) \
              -exec fgrep "${pkgpath}" {} + || true)
 if [ -n "$found" ]; then
     echo "The package \`$pkgpath' is still mentioned by the following files:"
