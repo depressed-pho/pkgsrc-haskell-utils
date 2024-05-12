@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -eu
+
+cd /usr/pkgsrc
+find . -maxdepth 3 -mindepth 3 -name Makefile \
+     -exec grep -F --files-with-matches mk/haskell.mk {} + |
+    sed -e 's,\./,,;s,/Makefile$,,' |
+    grep -E -v '^wip/' |
+    sort -u |
+    while read -r pkgdir; do # For each package using mk/haskell.mk
+        if [[ -d "${pkgdir}/patches" ]]; then
+            grep -r -n TODO "${pkgdir}/patches" || true
+        fi
+    done

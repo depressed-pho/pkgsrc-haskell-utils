@@ -5,6 +5,7 @@ bin_SCRIPTS= \
 	import-and-register \
 	remove-and-unregister \
 	list-all-haskell \
+	list-haskell-patches-todo \
 	list-orphaned-haskell-libs \
 	list-redundant-haskell-wip \
 	rebuild-all-haskell \
