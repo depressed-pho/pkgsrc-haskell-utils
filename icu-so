@@ -1,0 +1,158 @@
+#!/usr/bin/env bash
+set -eu
+
+# Lol, this isn't even remotely related to Haskell at all. But I'm too lazy
+# to create a separate repository just for it.
+
+readonly LOCALBASE="${LOCALBASE:-/usr/pkg}"
+readonly XDG_DATA_HOME="${XDG_DATA_DIR:-${HOME}/.local/share}"
+
+readonly ARCHIVE_DIR="${XDG_DATA_HOME}/icu-so/archives"
+readonly PROGNAME="${0##*/}"
+
+function usage() {
+    echo >&2 "Usage: $0 COMMAND"
+    echo >&2
+    echo >&2 "Commands:"
+    echo >&2 "    save"
+    echo >&2 "        Search for ICU shared libraries in \`${LOCALBASE}/lib' and"
+    echo >&2 "        create backups in \`${ARCHIVE_DIR}'."
+    echo >&2
+    echo >&2 "    restore VERSION"
+    echo >&2 "        Restore a set of libraries of the specified version."
+    echo >&2
+    echo >&2 "    clean"
+    echo >&2 "        Remove all libraries that have been restored with this tool."
+    echo >&2
+    echo >&2 "    list"
+    echo >&2 "        List saved versions."
+    echo >&2
+    echo >&2 "    gc"
+    echo >&2 "        Delete all backups except for the latest one."
+}
+
+function save() {
+    # Collect versions in ${LOCALBASE}/lib
+    local -A vermap
+    local file
+    for file in "${LOCALBASE}/lib/libicu"*".so."*; do
+        local name="${file##*/}"
+        local ver="${name#libicu}"
+        ver="${ver#*.so.}"
+        if [[ "$ver" == *.* ]]; then
+            continue
+        fi
+        vermap+=(["$ver"]=1)
+    done
+
+    # Then create an archive for each version
+    mkdir -p "${ARCHIVE_DIR}"
+    local ver
+    for ver in "${!vermap[@]}"; do
+        echo >&2 "$PROGNAME: Creating a backup for ICU version ${ver}..."
+        tar -zcf "${ARCHIVE_DIR}/icu-${ver}.tar.gz" \
+            -C "${LOCALBASE}/lib" \
+            -T <(for file in "${LOCALBASE}/lib/libicu"*".so.${ver}"*; do
+                     echo "${file##*/}"
+                 done)
+    done
+}
+
+function clean() {
+    local -a files
+    local file
+    for file in "${LOCALBASE}/lib/libicu"*".so."*; do
+        if pkg_info -q -F "$file" >/dev/null 2>&1; then
+            # This one isn't obsolete.
+            continue
+        fi
+        echo >&2 "$PROGNAME: Removing ${file}"
+        files+=("$file")
+    done
+    rm -f "${files[@]}"
+}
+
+function saved_vers() {
+    local file
+    for file in "${ARCHIVE_DIR}/icu-"*".tar.gz"; do
+        local name="${file##*/}"
+        local ver="${name#icu-}"
+        echo "${ver%.tar.gz}"
+    done
+}
+
+function list() {
+    local -a vers
+    mapfile -t vers < <(saved_vers)
+    if (( ${#vers} > 0 )); then
+        echo >&2 "$PROGNAME: The following versions have been saved:"
+        local ver
+        for ver in "${vers[@]}"; do
+            echo >&2 -n "- ICU "
+            echo "$ver"
+        done
+    else
+        echo >&2 "$PROGNAME: No versions of ICU have been saved"
+    fi
+}
+
+function gc() {
+    local -a vers
+    mapfile -t vers < <(saved_vers)
+
+    local -a sorted
+    mapfile -t sorted < <(sort <<<"${vers[*]}")
+
+    for idx in "${!sorted[@]}"; do
+        local ver="${sorted[$idx]}"
+        if (( idx + 1 == ${#sorted[@]} )); then
+            echo >&2 "$PROGNAME: Preserving ICU ${ver} because it's the latest backup"
+        else
+            echo >&2 "$PROGNAME: Deleting backup for ICU ${ver}"
+            rm -f "${ARCHIVE_DIR}/icu-${ver}.tar.gz"
+        fi
+    done
+}
+
+function restore() {
+    local ver="$1"
+
+    local archive="${ARCHIVE_DIR}/icu-${ver}.tar.gz"
+    if [[ ! -f "${archive}" ]]; then
+        echo >&2 "$PROGNAME: No such version has been saved: ${ver}"
+        return 1
+    fi
+
+    echo >&2 "$PROGNAME: Restoring ICU ${ver}"
+    tar -zxvf "$archive" -C "${LOCALBASE}/lib"
+}
+
+case "$#" in
+    1)
+        case "$1" in
+            "help"|"-h")
+                usage;;
+            "save")
+                save;;
+            "clean")
+                clean;;
+            "list")
+                list;;
+            "gc")
+                gc;;
+            *)
+                usage
+                exit 1;;
+        esac;;
+    2)
+        case "$1" in
+            "restore")
+                restore "$2";;
+            *)
+                usage
+                exit 1;;
+        esac;;
+    *)
+        usage
+        exit 1;;
+esac

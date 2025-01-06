@@ -2,6 +2,7 @@ bindir= ~/bin
 bin_SCRIPTS= \
 	commit-with-pkgdir \
 	grep-all-haskell \
+	icu-so \
 	import-and-register \
 	remove-and-unregister \
 	list-all-haskell \
