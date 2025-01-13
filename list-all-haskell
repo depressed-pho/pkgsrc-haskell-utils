@@ -1,27 +1,56 @@
-#!/bin/sh
-set -eu
+#!/usr/bin/env bash
+set -o errexit -o nounset
 
-cd /usr/pkgsrc
-find . -maxdepth 3 -mindepth 3 -name Makefile \
-     -exec grep -F --files-with-matches mk/haskell.mk {} + |
-    sed -e 's,\./,,;s,/Makefile$,,' |
-    grep -E -v '^wip/' |
-    sort -u |
-    while read -r pkgdir; do # For each package using mk/haskell.mk
-        # Self-cycle to make it appear in the result even if it has no
-        # dependencies
-        echo "${pkgdir} ${pkgdir}"
-        (cd "${pkgdir}" && bmake show-vars VARNAMES="BUILD_DEPENDS TOOL_DEPENDS DEPENDS") |
-            tr ' ' '\n' |
-            cut -d ':' -f 2 |
-            sed 's|../../||' |
-            sort -u |
-            while read -r pkgdep; do
-                # Omit the dependency if it does not use mk/haskell.mk
-                if grep -F mk/haskell.mk "${pkgdep}/Makefile" >/dev/null 2>&1; then
-                    # tsort's notation: ${pkgdir} depends on ${pkgdep}
-                    echo "${pkgdep} ${pkgdir}"
-                fi
-            done
-    done |
-    tsort
+readonly MAKE="bmake"
+readonly PKGSRCDIR="/usr/pkgsrc"
+
+function list_haskell_pkgpaths() {
+    find "$PKGSRCDIR" -maxdepth 3 -mindepth 3 -name Makefile \
+         -exec grep -F --files-with-matches mk/haskell.mk {} + |
+        sed -e "s,${PKGSRCDIR}/,," -e 's,/Makefile$,,' |
+        grep -E -v '^wip/' |
+        sort -u
+}
+
+function list_deps() {
+    local pkgdir="$1"
+
+    ${MAKE} -C "${PKGSRCDIR}/${pkgdir}" show-vars VARNAMES="BUILD_DEPENDS TOOL_DEPENDS DEPENDS" |
+        tr ' ' '\n' |
+        sed '/^$/d' |
+        cut -d ':' -f 2 |
+        sed 's|../../||' |
+        sort -u
+}
+
+declare -A seen # pkgdir => 1
+function tsort() {
+    local pkgdir="$1"
+
+    # Have we seen this package before?
+    if [[ -v "seen[$pkgdir]" ]]; then
+        # Yes, skip it.
+        return
+    fi
+
+    local dep
+    while read -r dep; do # For each dependency
+        # Have we seen this package before?
+        if [[ -v "seen[$dep]" ]]; then
+            # Yes, skip it.
+            continue
+
+        # Does this dependency include mk/haskell.mk?
+        elif grep -F mk/haskell.mk "${PKGSRCDIR}/${dep}/Makefile" >/dev/null 2>&1; then
+            # Yes, print it.
+            tsort "$dep"
+        fi
+    done < <(list_deps "$pkgdir")
+
+    echo "$pkgdir"
+    seen+=(["$pkgdir"]=1)
+}
+
+while read -r pkgdir; do # For each package using mk/haskell.mk
+    tsort "$pkgdir"
+done < <(list_haskell_pkgpaths)
