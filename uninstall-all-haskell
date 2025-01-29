@@ -14,6 +14,9 @@ else
     packages="${pkgs[*]}"
 fi
 
+# But don't uninstall cabal2pkg.
+packages=$(echo "$packages" | grep -Fv "cabal2pkg")
+
 (
     echo "These packages are to be deleted. Are you okay with this?"
     echo "(You'll be prompted after quitting the pager.)"
