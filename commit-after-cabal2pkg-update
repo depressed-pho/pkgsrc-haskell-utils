@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+set -o errexit -o nounset
+
+readonly MAKE="bmake"
+
+if [[ ! -f COMMIT_MSG ]]; then
+   echo >&2 "There is no COMMIT_MSG. Did you really update it with cabal2pkg?"
+   exit 1
+fi
+
+{
+    echo "----------------------------------------------------------------------";
+    echo "  pkglint:"
+    echo "----------------------------------------------------------------------";
+    pkglint
+} | ${PAGER}
+
+{
+    echo "----------------------------------------------------------------------";
+    echo "  diff:"
+    echo "----------------------------------------------------------------------";
+    cvs diff -u
+} | ${PAGER}
+
+{
+    echo "----------------------------------------------------------------------";
+    echo "  commit message:";
+    echo "----------------------------------------------------------------------";
+    cat COMMIT_MSG
+    echo "----------------------------------------------------------------------";
+} | ${PAGER}
+
+read -r -n 1 -p "Okay to commit? Type C-c to abort" _key
+
+set +x
+cvs ci -F COMMIT_MSG
+rm COMMIT_MSG
+${MAKE} cce CTYPE=Updated

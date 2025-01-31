@@ -1,5 +1,6 @@
 bindir= ~/bin
 bin_SCRIPTS= \
+	commit-after-cabal2pkg-update \
 	commit-with-pkgdir \
 	grep-all-haskell \
 	icu-so \
