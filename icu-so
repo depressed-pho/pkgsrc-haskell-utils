@@ -75,6 +75,7 @@ function clean() {
 function saved_vers() {
     local file
     for file in "${ARCHIVE_DIR}/icu-"*".tar.gz"; do
+        [[ -e "$file" ]] || break # Poor man's nullglob.
         local name="${file##*/}"
         local ver="${name#icu-}"
         echo "${ver%.tar.gz}"
@@ -84,7 +85,7 @@ function saved_vers() {
 function list() {
     local -a vers
     mapfile -t vers < <(saved_vers)
-    if (( ${#vers} > 0 )); then
+    if (( ${#vers[@]} > 0 )); then
         echo >&2 "$PROGNAME: The following versions have been saved:"
         local ver
         for ver in "${vers[@]}"; do
@@ -99,6 +100,11 @@ function list() {
 function gc() {
     local -a vers
     mapfile -t vers < <(saved_vers)
+
+    if (( ${#vers[@]} == 0 )); then
+        echo >&2 "$PROGNAME: No versions of ICU have been saved"
+        return
+    fi
 
     local -a sorted
     mapfile -t sorted < <(sort <<<"${vers[*]}")
