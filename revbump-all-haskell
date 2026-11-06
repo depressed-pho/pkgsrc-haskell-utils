@@ -14,6 +14,7 @@ if [ ! -e /tmp/allbump ]; then
          -exec grep -F --files-with-matches mk/haskell.mk {} + | \
         sed -e 's,\./,,;s,/Makefile$,,' | \
         grep -E -v '^wip/' | \
+        grep -E -v '^tmp/' | \
         sort -u | tee /tmp/allbump
 fi
 
