@@ -107,7 +107,9 @@ function gc() {
     fi
 
     local -a sorted
+    IFS=$'\n'
     mapfile -t sorted < <(sort <<<"${vers[*]}")
+    unset IFS
 
     for idx in "${!sorted[@]}"; do
         local ver="${sorted[$idx]}"
