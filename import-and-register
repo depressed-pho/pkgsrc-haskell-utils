@@ -1,6 +1,13 @@
-#!/bin/sh
-set -eux
+#!/usr/bin/env bash
+set -eu
 
+if [[ -f COMMIT_MSG ]]; then
+    declare _key
+    read -r -n 1 -p  "COMMIT_MSG exists. Okay to remove it? Type C-c to abort" _key
+    rm -f COMMIT_MSG
+fi
+
+set -x
 pkglint
 import-package # pkgtools/import-package
 bmake cce CTYPE=Added
