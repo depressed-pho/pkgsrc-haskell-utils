@@ -15,9 +15,9 @@ declare rewrite_gawk
 read -r -d '' rewrite_gawk <<'EOF' || true
 BEGIN {
     end_of_header = 0;
-    delete header[0]; /* Hack: declare the array */
+    delete header[0]; # Hack: declare the array
     delete pkgdirs[0];
-    delete disabled[0]; /* name -> line */
+    delete disabled[0]; # name -> line
     delete footer[0];
 }
 /^SUBDIR\+=/ {
